@@ -689,7 +689,8 @@ async function go() {
     document.getElementById("rTimeNote").textContent = dest.notes || "";
     document.getElementById("resultMode").textContent =
       `by ${mode === "bicycling" ? "bicycle 🚲" : "foot 🚶"}  ·  from: ${data.origin_addresses[0]}`;
-
+    console.log( "Found trailhead: " + dest.name );
+    
     show("result");
 
   } catch (err) {
