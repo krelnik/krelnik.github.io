@@ -622,7 +622,7 @@ async function go() {
   const mode    = document.querySelector('input[name="mode"]:checked').value;
   const key     = savedKey || document.getElementById("apiKey").value.trim();
 
-  //hide("result"); hide("error");
+  hide("result"); hide("error");
 
   if (!key)     { showError("Please enter and save your Google Maps API key above."); return; }
   if (!address) { showError("Please enter a starting address."); return; }
@@ -675,7 +675,7 @@ async function go() {
 
     // Highlight in table
     const row = document.getElementById(`dest-row-${bestIdx}`);
-    if (false) { //row
+    if (row) { //row
       row.classList.add("highlight-row");
       document.getElementById("destDetails").open = true;
       setTimeout(() => row.scrollIntoView({ behavior: "smooth", block: "nearest" }), 300);
@@ -704,8 +704,8 @@ async function go() {
 // ─────────────────────────────────────────────
 //  HELPERS
 // ─────────────────────────────────────────────
-function show(id)  { document.getElementById(id).style.display = ""; }
-function hide(id)  { document.getElementById(id).style.display = "none"; }
+function show(id)  { ele = document.getElementById(id); ele.style.display = ""; ele.visibility = visible; }
+function hide(id)  { ele = document.getElementById(id); ele.style.display = "none"; ele.visiblity = invisible; }
 function showLoader(on) { document.getElementById("loader").style.display = on ? "block" : "none"; }
 function showError(msg) {
   const el = document.getElementById("error");
