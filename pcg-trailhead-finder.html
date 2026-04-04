@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trail Entry Point Finder</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --forest: #1a2e1a;
+    --moss:   #3d5a2e;
+    --fern:   #6b8f4e;
+    --sage:   #a8bc8d;
+    --mist:   #e8ede0;
+    --cream:  #f5f2ea;
+    --bark:   #5c4a32;
+    --gold:   #c8a84b;
+    --sky:    #7aa8c0;
+    --white:  #fafaf7;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--forest);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--forest);
+    padding: 2.5rem 2rem 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 80% at 80% 50%, rgba(107,143,78,.18) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 60% at 10% 80%, rgba(122,168,192,.12) 0%, transparent 60%);
+  }
+  .header-inner {
+    position: relative;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  .eyebrow {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    font-size: .7rem;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--sage);
+    margin-bottom: .6rem;
+  }
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    color: var(--white);
+    line-height: 1.05;
+    margin-bottom: .5rem;
+  }
+  header h1 span { color: var(--gold); }
+  header p {
+    font-size: .9rem;
+    color: var(--sage);
+    font-weight: 300;
+    letter-spacing: .01em;
+  }
+
+  /* ── TRAIL MARKER DECO ── */
+  .trail-deco {
+    position: absolute;
+    right: 2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: .07;
+    pointer-events: none;
+  }
+  .trail-deco svg { width: 160px; height: 160px; }
+
+  /* ── MAIN CARD ── */
+  main {
+    max-width: 720px;
+    margin: 2.5rem auto;
+    padding: 0 1.5rem 3rem;
+  }
+
+  .card {
+    background: var(--white);
+    border-radius: 4px;
+    box-shadow: 0 2px 24px rgba(26,46,26,.08), 0 1px 4px rgba(26,46,26,.06);
+    padding: 2.2rem 2.4rem;
+    border-top: 3px solid var(--fern);
+  }
+
+  /* ── API KEY ── */
+  .api-section {
+    margin-bottom: 2rem;
+    padding-bottom: 1.6rem;
+    border-bottom: 1px solid var(--mist);
+  }
+  .api-section label {
+    display: block;
+    font-size: .72rem;
+    font-weight: 500;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--bark);
+    margin-bottom: .5rem;
+  }
+  .api-key-row {
+    display: flex;
+    gap: .6rem;
+  }
+  .api-key-row input {
+    flex: 1;
+    padding: .65rem .9rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .85rem;
+    border: 1.5px solid var(--sage);
+    border-radius: 3px;
+    background: var(--cream);
+    color: var(--forest);
+    outline: none;
+    transition: border-color .2s;
+    font-style: italic;
+  }
+  .api-key-row input:focus { border-color: var(--fern); font-style: normal; }
+  .btn-sm {
+    padding: .65rem 1.1rem;
+    background: var(--moss);
+    color: var(--white);
+    border: none;
+    border-radius: 3px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .8rem;
+    font-weight: 500;
+    cursor: pointer;
+    letter-spacing: .05em;
+    transition: background .2s;
+  }
+  .btn-sm:hover { background: var(--forest); }
+  .key-status {
+    font-size: .75rem;
+    margin-top: .4rem;
+    color: var(--fern);
+    font-style: italic;
+  }
+
+  /* ── MODE RADIO ── */
+  .section-label {
+    font-size: .72rem;
+    font-weight: 500;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--bark);
+    margin-bottom: .8rem;
+    display: block;
+  }
+  .mode-row {
+    display: flex;
+    gap: .8rem;
+    margin-bottom: 1.8rem;
+  }
+  .mode-btn {
+    flex: 1;
+    position: relative;
+  }
+  .mode-btn input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
+  .mode-btn label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .55rem;
+    padding: .85rem 1rem;
+    border: 2px solid var(--sage);
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: .88rem;
+    font-weight: 500;
+    color: var(--moss);
+    background: var(--cream);
+    transition: all .18s;
+    user-select: none;
+  }
+  .mode-btn input:checked + label {
+    background: var(--forest);
+    border-color: var(--forest);
+    color: var(--white);
+    box-shadow: 0 2px 10px rgba(26,46,26,.18);
+  }
+  .mode-btn label svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+  /* ── ADDRESS INPUT ── */
+  .address-section { margin-bottom: 1.8rem; }
+  .address-section input {
+    width: 100%;
+    padding: .85rem 1rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .95rem;
+    border: 1.5px solid var(--sage);
+    border-radius: 3px;
+    background: var(--cream);
+    color: var(--forest);
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .address-section input::placeholder { color: #aab89a; }
+  .address-section input:focus {
+    border-color: var(--fern);
+    box-shadow: 0 0 0 3px rgba(107,143,78,.12);
+  }
+
+  /* ── GO BUTTON ── */
+  #goBtn {
+    width: 100%;
+    padding: 1rem;
+    background: var(--fern);
+    color: var(--white);
+    border: none;
+    border-radius: 3px;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    cursor: pointer;
+    transition: background .2s, transform .12s, box-shadow .2s;
+    box-shadow: 0 2px 12px rgba(107,143,78,.3);
+  }
+  #goBtn:hover:not(:disabled) {
+    background: var(--moss);
+    box-shadow: 0 4px 18px rgba(61,90,46,.35);
+    transform: translateY(-1px);
+  }
+  #goBtn:active:not(:disabled) { transform: translateY(0); }
+  #goBtn:disabled { opacity: .55; cursor: not-allowed; }
+
+  /* ── LOADER ── */
+  #loader {
+    display: none;
+    text-align: center;
+    padding: 2rem 0 .5rem;
+  }
+  .dot-trail {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .dot-trail span {
+    width: 8px; height: 8px;
+    background: var(--fern);
+    border-radius: 50%;
+    animation: bounce .9s ease-in-out infinite;
+  }
+  .dot-trail span:nth-child(2) { animation-delay: .15s; }
+  .dot-trail span:nth-child(3) { animation-delay: .3s; }
+  @keyframes bounce {
+    0%,80%,100% { transform: translateY(0); opacity:.5; }
+    40% { transform: translateY(-8px); opacity:1; }
+  }
+  #loader p { font-size: .8rem; color: var(--fern); margin-top: .7rem; letter-spacing: .06em; font-weight: 300; }
+
+  /* ── ERROR ── */
+  #error {
+    display: none;
+    margin-top: 1.4rem;
+    padding: 1rem 1.2rem;
+    background: #fdf0ee;
+    border-left: 3px solid #c0634e;
+    border-radius: 0 3px 3px 0;
+    font-size: .88rem;
+    color: #8b3a28;
+  }
+
+  /* ── RESULT ── */
+  #result {
+    display: none;
+    margin-top: 1.8rem;
+    animation: fadeUp .4s ease both;
+  }
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(12px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+  .result-header {
+    display: flex;
+    align-items: center;
+    gap: .7rem;
+    margin-bottom: 1.2rem;
+  }
+  .result-badge {
+    width: 36px; height: 36px;
+    background: var(--fern);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .result-badge svg { width: 18px; height: 18px; fill: white; }
+  .result-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    color: var(--forest);
+    font-weight: 700;
+  }
+  .result-header p {
+    font-size: .75rem;
+    color: var(--fern);
+    margin-top: .1rem;
+  }
+
+  .result-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .8rem;
+    margin-bottom: 1rem;
+  }
+  @media(max-width:480px) { .result-grid { grid-template-columns: 1fr; } }
+
+  .stat-box {
+    background: var(--cream);
+    border-radius: 3px;
+    padding: 1rem 1.1rem;
+    border: 1px solid var(--mist);
+  }
+  .stat-box.full { grid-column: 1 / -1; }
+  .stat-label {
+    font-size: .65rem;
+    font-weight: 500;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    color: var(--bark);
+    margin-bottom: .3rem;
+  }
+  .stat-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--forest);
+  }
+  .stat-value.accent { color: var(--fern); }
+  .stat-sub {
+    font-size: .75rem;
+    color: #7a896a;
+    margin-top: .15rem;
+  }
+
+  /* ── DESTINATIONS LIST ── */
+  details {
+    margin-top: 1.4rem;
+    border: 1px solid var(--mist);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  summary {
+    padding: .75rem 1rem;
+    font-size: .78rem;
+    font-weight: 500;
+    letter-spacing: .06em;
+    color: var(--moss);
+    cursor: pointer;
+    background: var(--mist);
+    user-select: none;
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  summary::after { content: '▾'; font-size: .75rem; }
+  details[open] summary::after { content: '▴'; }
+  .dest-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .78rem;
+  }
+  .dest-table th {
+    text-align: left;
+    padding: .5rem .8rem;
+    background: var(--cream);
+    font-weight: 500;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    font-size: .65rem;
+    color: var(--bark);
+    border-bottom: 1px solid var(--mist);
+  }
+  .dest-table td {
+    padding: .45rem .8rem;
+    border-bottom: 1px solid var(--mist);
+    color: var(--forest);
+  }
+  .dest-table tr:last-child td { border-bottom: none; }
+  .dest-table tr.highlight-row td { background: rgba(107,143,78,.1); font-weight: 500; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="trail-deco">
+    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="50" cy="50" r="48" stroke="white" stroke-width="3"/>
+      <path d="M20 70 Q35 30 50 50 Q65 70 80 30" stroke="white" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <circle cx="20" cy="70" r="5" fill="white"/>
+      <circle cx="80" cy="30" r="5" fill="white"/>
+    </svg>
+  </div>
+  <div class="header-inner">
+    <p class="eyebrow">Peachtree Creek Greenway</p>
+    <h1>Trail Entry<br><span>Point Finder</span></h1>
+    <p>Find the closest trailhead from your address</p>
+  </div>
+</header>
+
+<main>
+  <div class="card">
+
+    <!-- API KEY -->
+    <div class="api-section">
+      <label for="apiKey">Google Maps API Key</label>
+      <div class="api-key-row">
+        <input type="password" id="apiKey" placeholder="Paste your API key here…" autocomplete="off">
+        <button class="btn-sm" onclick="saveKey()">Save</button>
+      </div>
+      <p class="key-status" id="keyStatus">⬆ Enter your key to enable distance lookups</p>
+    </div>
+
+    <!-- TRAVEL MODE -->
+    <span class="section-label">Mode of travel</span>
+    <div class="mode-row">
+      <div class="mode-btn">
+        <input type="radio" id="modeBike" name="mode" value="bicycling" checked>
+        <label for="modeBike">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/>
+            <path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5L9 10l-3 3H3"/>
+            <path d="M9 10l6 1 2-4h3"/>
+          </svg>
+          Bicycle
+        </label>
+      </div>
+      <div class="mode-btn">
+        <input type="radio" id="modeWalk" name="mode" value="walking">
+        <label for="modeWalk">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="13" cy="4" r="2"/>
+            <path d="M10.5 8.5l-2 3 3.5 3-1.5 5.5M13 8.5l1.5 3-3 1 2 4.5"/>
+            <path d="M8 17l-1 4M16.5 16l1 4"/>
+          </svg>
+          Walking
+        </label>
+      </div>
+    </div>
+
+    <!-- ADDRESS -->
+    <div class="address-section">
+      <span class="section-label">Your starting address</span>
+      <input type="text" id="address" placeholder="e.g. 123 Main St, Smyrna, GA 30080"
+             onkeydown="if(event.key==='Enter') go()">
+    </div>
+
+    <!-- GO -->
+    <button id="goBtn" onclick="go()">Find Nearest Entry Point →</button>
+
+    <!-- LOADER -->
+    <div id="loader">
+      <div class="dot-trail"><span></span><span></span><span></span></div>
+      <p>Calculating distances…</p>
+    </div>
+
+    <!-- ERROR -->
+    <div id="error"></div>
+
+    <!-- RESULT -->
+    <div id="result">
+      <div class="result-header">
+        <div class="result-badge">
+          <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+        </div>
+        <div>
+          <h2>Nearest Entry Point Found</h2>
+          <p id="resultMode"></p>
+        </div>
+      </div>
+      <div class="result-grid">
+        <div class="stat-box full">
+          <div class="stat-label">Trailhead Name</div>
+          <div class="stat-value" id="rName"></div>
+          <div class="stat-sub" id="rSegment"></div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Distance</div>
+          <div class="stat-value accent" id="rDist"></div>
+          <div class="stat-sub">by road/path</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Est. Travel Time</div>
+          <div class="stat-value" id="rTime"></div>
+          <div class="stat-sub" id="rTimeNote"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DESTINATIONS REFERENCE -->
+    <details id="destDetails">
+      <summary>All trail entry points <span id="destCount"></span></summary>
+      <table class="dest-table" id="destTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Trailhead</th>
+            <th>Segment</th>
+            <th>Coordinates</th>
+          </tr>
+        </thead>
+        <tbody id="destBody"></tbody>
+      </table>
+    </details>
+
+  </div>
+</main>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+//  TRAIL DESTINATIONS
+//  Edit the entries below to match your trail's actual entry points.
+//
+//  Each entry requires:
+//    name    – Trailhead display name shown in the result
+//    segment – Trail segment label (e.g. mile marker, section name)
+//    lat     – Latitude  (decimal degrees, e.g. 34.0521)
+//    lng     – Longitude (decimal degrees, e.g. -84.3358)
+//    notes   – Any extra info shown under the travel time in results
+//              (parking, amenities, access notes, etc.)
+//
+//  How to find lat/lng:
+//    1. Open Google Maps and right-click the exact entry point
+//    2. Click the coordinates shown at the top of the context menu
+//    3. Paste them here (lat first, then lng — lng is usually negative
+//       for locations in the US)
+//
+//  You can add or remove as many entries as you need.
+//  The Distance Matrix API supports up to 25 destinations per call.
+// ═══════════════════════════════════════════════════════════════════
+const DESTINATIONS = [
+  {
+    name:    "N. Druid Hills Road",
+    segment: "Brookhaven Model Mile",
+    lat:     33.83324,
+    lng:     -84.33833,
+    notes:   "OPEN. 23 parking spaces available, easy access from I-85"
+  },
+  {
+    name:    "Corporate Boulevard",
+    segment: "Brookhaven Model Mile",
+    lat:     33.835105,
+    lng:     -84.335203,
+    notes:   "OPEN. 8 parking spaces plus more in the Corp. Square lot across the street.""
+  },
+  {
+    name:    "Corporate Square Parking",
+    segment: "Brookhaven Model Mile",
+    lat:     33.837255,
+    lng:     -84.333355,
+    notes:   "OPEN. Access from the Corporate Square parking lot."
+  },
+  {
+    name:    "Briarwood Road",
+    segment: "Brookhaven Model Mile",
+    lat:     33.841407,
+    lng:     -84.323243,
+    notes:   "OPEN. 16 parking spaces plus more nearby in the Brookhaven Municipal Building lot."
+  }
+  // ← Add more entries here, separated by commas
+];
+// ═══════════════════════════════════════════════════════════════════
+
+// ─────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────
+let savedKey = "";
+let lastWinnerIndex = -1;
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+(function init() {
+  // Build destination table
+  const tbody = document.getElementById("destBody");
+  DESTINATIONS.forEach((d, i) => {
+    const tr = document.createElement("tr");
+    tr.id = `dest-row-${i}`;
+    tr.innerHTML = `
+      <td>${i+1}</td>
+      <td>${d.name}</td>
+      <td>${d.segment}</td>
+      <td style="font-size:.72rem;color:#7a896a">${d.lat.toFixed(4)}, ${d.lng.toFixed(4)}</td>`;
+    tbody.appendChild(tr);
+  });
+  document.getElementById("destCount").textContent = `(${DESTINATIONS.length})`;
+})();
+
+function saveKey() {
+  const v = document.getElementById("apiKey").value.trim();
+  if (!v) { document.getElementById("keyStatus").textContent = "⚠ No key entered"; return; }
+  savedKey = v;
+  document.getElementById("keyStatus").textContent = "✓ Key saved for this session";
+}
+
+// ─────────────────────────────────────────────
+//  MAIN ACTION
+// ─────────────────────────────────────────────
+async function go() {
+  const address = document.getElementById("address").value.trim();
+  const mode    = document.querySelector('input[name="mode"]:checked').value;
+  const key     = savedKey || document.getElementById("apiKey").value.trim();
+
+  hide("result"); hide("error");
+
+  if (!key)     { showError("Please enter and save your Google Maps API key above."); return; }
+  if (!address) { showError("Please enter a starting address."); return; }
+
+  showLoader(true);
+  document.getElementById("goBtn").disabled = true;
+
+  // Clear previous highlight
+  if (lastWinnerIndex >= 0) {
+    const old = document.getElementById(`dest-row-${lastWinnerIndex}`);
+    if (old) old.classList.remove("highlight-row");
+  }
+
+  try {
+    const destinations = DESTINATIONS.map(d => `${d.lat},${d.lng}`).join("|");
+    const url = `https://maps.googleapis.com/maps/api/distancematrix/json`
+              + `?origins=${encodeURIComponent(address)}`
+              + `&destinations=${encodeURIComponent(destinations)}`
+              + `&mode=${mode}`
+              + `&key=${key}`;
+
+    // Use a CORS proxy or call via a backend; for a local file this will be blocked by CORS.
+    // We route through a simple proxy pattern: allorigins (for demo/dev use)
+    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
+
+    const resp = await fetch(proxyUrl);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+
+    if (data.status !== "OK") {
+      throw new Error(`API error: ${data.status}${data.error_message ? " – " + data.error_message : ""}`);
+    }
+
+    const elements = data.rows[0].elements;
+
+    // Find shortest by distance value (meters)
+    let bestIdx = -1, bestMeters = Infinity;
+    elements.forEach((el, i) => {
+      if (el.status === "OK" && el.distance.value < bestMeters) {
+        bestMeters = el.distance.value;
+        bestIdx = i;
+      }
+    });
+
+    if (bestIdx < 0) throw new Error("No reachable destinations found. Check your address and try again.");
+
+    const best    = elements[bestIdx];
+    const dest    = DESTINATIONS[bestIdx];
+    lastWinnerIndex = bestIdx;
+
+    // Highlight in table
+    const row = document.getElementById(`dest-row-${bestIdx}`);
+    if (row) {
+      row.classList.add("highlight-row");
+      document.getElementById("destDetails").open = true;
+      setTimeout(() => row.scrollIntoView({ behavior: "smooth", block: "nearest" }), 300);
+    }
+
+    // Populate result
+    document.getElementById("rName").textContent    = dest.name;
+    document.getElementById("rSegment").textContent = dest.segment;
+    document.getElementById("rDist").textContent    = best.distance.text;
+    document.getElementById("rTime").textContent    = best.duration.text;
+    document.getElementById("rTimeNote").textContent = dest.notes || "";
+    document.getElementById("resultMode").textContent =
+      `by ${mode === "bicycling" ? "bicycle 🚲" : "foot 🚶"}  ·  from: ${data.origin_addresses[0]}`;
+
+    show("result");
+
+  } catch (err) {
+    showError(err.message + " " + err.cause || "An unknown error occurred.");
+  } finally {
+    showLoader(false);
+    document.getElementById("goBtn").disabled = false;
+  }
+}
+
+// ─────────────────────────────────────────────
+//  HELPERS
+// ─────────────────────────────────────────────
+function show(id)  { document.getElementById(id).style.display = ""; }
+function hide(id)  { document.getElementById(id).style.display = "none"; }
+function showLoader(on) { document.getElementById("loader").style.display = on ? "block" : "none"; }
+function showError(msg) {
+  const el = document.getElementById("error");
+  el.innerHTML = `<strong>⚠ Error:</strong> ${msg}`;
+  el.style.display = "block";
+}
+</script>
+</body>
+</html>
