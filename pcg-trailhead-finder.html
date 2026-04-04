@@ -675,7 +675,7 @@ async function go() {
 
     // Highlight in table
     const row = document.getElementById(`dest-row-${bestIdx}`);
-    if (row) {
+    if (false) { //row
       row.classList.add("highlight-row");
       document.getElementById("destDetails").open = true;
       setTimeout(() => row.scrollIntoView({ behavior: "smooth", block: "nearest" }), 300);
