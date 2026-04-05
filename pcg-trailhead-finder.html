@@ -641,6 +641,7 @@ async function go() {
     const url = `https://maps.googleapis.com/maps/api/distancematrix/json`
               + `?origins=${encodeURIComponent(address)}`
               + `&destinations=${encodeURIComponent(destinations)}`
+              + `&units=imperial`
               + `&mode=${mode}`
               + `&key=${key}`;
 
